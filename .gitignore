@@ -1,0 +1,64 @@
+# Environment
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.so
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Alembic
+backend/alembic/versions/*.py
+!backend/alembic/versions/.gitkeep
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.local
+
+# IDE
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Docker volumes (local)
+mysql_data/
+redis_data/
+
+# Python-generated files
+__pycache__/
+
+# Virtual environments
+.venv/
+
+.env
+
+docker/volumes/
+
+logs/
+
+*.pyc
+*.pyo
+*.pyd
