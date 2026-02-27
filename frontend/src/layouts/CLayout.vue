@@ -1,30 +1,5 @@
 <template>
   <div class="c-layout">
-    <!-- 顶部信息条 -->
-    <div class="top-bar">
-      <div class="top-bar-inner">
-        <span class="top-bar-welcome">您好，欢迎访问中国移动积分商城</span>
-        <div class="top-bar-links">
-          <template v-if="authStore.isLoggedIn">
-            <router-link to="/user" class="top-link">{{ authStore.userInfo?.nickname }}</router-link>
-            <span class="top-divider">|</span>
-            <a class="top-link" @click="handleUserCmd('logout')" style="cursor:pointer">退出</a>
-          </template>
-          <template v-else>
-            <router-link to="/login" class="top-link">请登录</router-link>
-            <span class="top-divider">|</span>
-            <router-link to="/register" class="top-link">免费注册</router-link>
-          </template>
-          <span class="top-divider">|</span>
-          <router-link to="/user/orders" class="top-link">我的订单</router-link>
-          <span class="top-divider">|</span>
-          <router-link to="/user/points" class="top-link">我的积分</router-link>
-          <span class="top-divider">|</span>
-          <router-link to="/cart" class="top-link">购物车</router-link>
-        </div>
-      </div>
-    </div>
-
     <header class="c-header">
       <div class="header-inner">
         <!-- Logo -->

@@ -11,9 +11,9 @@
         :default-active="activeMenu"
         :collapse="collapsed"
         :collapse-transition="false"
-        background-color="#001529"
-        text-color="#ffffffa0"
-        active-text-color="#ffffff"
+        background-color="transparent"
+        text-color="#555"
+        active-text-color="#00a854"
         router
       >
         <el-menu-item index="/merchant/dashboard">
@@ -116,42 +116,66 @@ async function handleLogout() {
   display: flex;
   height: 100vh;
   overflow: hidden;
+  background: #f4f6f9;
 }
 
 .b-sidebar {
   width: 220px;
-  background: #001529;
+  background: #fff;
   display: flex;
   flex-direction: column;
   transition: width 0.25s;
   flex-shrink: 0;
+  border-right: 1px solid #eef0f3;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.04);
 
   &.collapsed { width: 64px; }
 }
 
 .sidebar-logo {
-  height: 56px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: #fff;
+  color: #00a854;
   cursor: pointer;
   font-size: 16px;
-  font-weight: 600;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  font-weight: 700;
+  border-bottom: 1px solid #f0f0f0;
   padding: 0 16px;
   overflow: hidden;
   white-space: nowrap;
 }
 
-.el-menu {
+/* 覆盖 el-menu 默认样式 */
+:deep(.el-menu) {
   border-right: none;
   flex: 1;
+  padding: 8px 8px;
+}
+:deep(.el-menu-item) {
+  border-radius: 8px;
+  margin-bottom: 2px;
+  font-size: 14px;
+  height: 44px;
+  line-height: 44px;
+}
+:deep(.el-menu-item:hover) {
+  background: #f0f9f5 !important;
+  color: #00a854 !important;
+}
+:deep(.el-menu-item.is-active) {
+  background: #e8f5ee !important;
+  color: #00a854 !important;
+  font-weight: 600;
+}
+:deep(.el-menu--collapse .el-menu-item) {
+  border-radius: 8px;
 }
 
 .sidebar-footer {
-  border-top: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid #f0f0f0;
   padding: 12px 16px;
 }
 
@@ -159,10 +183,13 @@ async function handleLogout() {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: rgba(255,255,255,0.6);
+  color: #999;
   text-decoration: none;
   font-size: 13px;
-  &:hover { color: #fff; }
+  border-radius: 6px;
+  padding: 6px 8px;
+  transition: all .15s;
+  &:hover { background: #f0f9f5; color: #00a854; }
 }
 
 .b-container {
@@ -173,14 +200,15 @@ async function handleLogout() {
 }
 
 .b-topbar {
-  height: 56px;
+  height: 60px;
   background: #fff;
-  border-bottom: 1px solid #f0f0f0;
-  padding: 0 20px;
+  border-bottom: 1px solid #eef0f3;
+  padding: 0 24px;
   display: flex;
   align-items: center;
   gap: 12px;
   flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 
   .el-breadcrumb { flex: 1; }
 
@@ -188,14 +216,14 @@ async function handleLogout() {
     display: flex;
     align-items: center;
     gap: 8px;
-    .merchant-name { font-size: 14px; color: #666; }
+    .merchant-name { font-size: 14px; color: #555; font-weight: 500; }
   }
 }
 
 .b-main {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
-  background: #f0f2f5;
+  padding: 24px;
+  background: #f4f6f9;
 }
 </style>

@@ -161,6 +161,73 @@ def get_activity(activity_id: int, db: Session = Depends(get_db)):
     return success(data)
 
 
+@router.post("/admin/activities")
+def create_activity(
+    body: dict,
+    current_user=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    from app.models.activity import Activity
+    from datetime import datetime
+    a = Activity(
+        title=body["title"],
+        description=body.get("description"),
+        type=body.get("type", "discount"),
+        banner_url=body.get("banner_url"),
+        discount_rate=body.get("discount_rate"),
+        quota=body.get("quota"),
+        start_at=datetime.fromisoformat(body["start_at"]),
+        end_at=datetime.fromisoformat(body["end_at"]),
+        status=body.get("status", "draft"),
+        created_by=current_user.id,
+    )
+    db.add(a)
+    db.commit()
+    db.refresh(a)
+    return success({"id": a.id, "title": a.title})
+
+
+@router.put("/admin/activities/{activity_id}")
+def update_activity(
+    activity_id: int,
+    body: dict,
+    current_user=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    from app.models.activity import Activity
+    from app.core.exceptions import BusinessException, ErrCode
+    from datetime import datetime
+    a = db.query(Activity).filter(Activity.id == activity_id, Activity.deleted_at.is_(None)).first()
+    if not a:
+        raise BusinessException(ErrCode.NOT_FOUND, "活动不存在")
+    for field in ("title", "description", "type", "banner_url", "discount_rate", "quota", "status"):
+        if field in body:
+            setattr(a, field, body[field])
+    if "start_at" in body:
+        a.start_at = datetime.fromisoformat(body["start_at"])
+    if "end_at" in body:
+        a.end_at = datetime.fromisoformat(body["end_at"])
+    db.commit()
+    return success({"id": a.id})
+
+
+@router.delete("/admin/activities/{activity_id}")
+def delete_activity(
+    activity_id: int,
+    current_user=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    from app.models.activity import Activity
+    from app.core.exceptions import BusinessException, ErrCode
+    from datetime import datetime, timezone
+    a = db.query(Activity).filter(Activity.id == activity_id, Activity.deleted_at.is_(None)).first()
+    if not a:
+        raise BusinessException(ErrCode.NOT_FOUND, "活动不存在")
+    a.deleted_at = datetime.now(timezone.utc)
+    db.commit()
+    return success({"message": "已删除"})
+
+
 @router.get("/announcements")
 def list_announcements(
     page: int = Query(1, ge=1),

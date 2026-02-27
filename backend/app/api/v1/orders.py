@@ -84,7 +84,7 @@ def confirm_order(order_id: int, current_user=Depends(get_current_user), db: Ses
 @router.get("/merchant/orders")
 def merchant_list_orders(
     page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=50),
+    page_size: int = Query(20, ge=1, le=200),
     status: Optional[str] = None,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
