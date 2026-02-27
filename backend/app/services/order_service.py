@@ -10,6 +10,7 @@ from app.models.user import User
 from app.models.points import PointsRecord
 from app.models.address import Address
 from app.models.inventory import Inventory
+from app.models.refund import RefundRequest
 
 
 ORDER_STATUS = {
@@ -303,7 +304,7 @@ def svc_confirm_order(db: Session, order_id: int, user_id: int) -> None:
     for it in items:
         inv = db.query(Inventory).filter(Inventory.sku_id == it.sku_id).first()
         if inv:
-            inv.locked_stock = max(0, inv.locked_stock - it.quantity)
+            inv.locked_quantity = max(0, inv.locked_quantity - it.quantity)
 
     db.commit()
 
@@ -323,3 +324,54 @@ def svc_ship_order(db: Session, order_id: int, merchant_id: int,
     o.express_company = express_company
     o.express_no = express_no
     db.commit()
+
+
+# -------- 售后退款 --------
+
+def svc_request_refund(db: Session, user_id: int, order_id: int, reason: str) -> dict:
+    o = db.query(Order).filter(
+        Order.id == order_id,
+        Order.user_id == user_id,
+        Order.deleted_at.is_(None),
+    ).first()
+    if not o:
+        raise BusinessException(ErrCode.NOT_FOUND, "订单不存在")
+    if o.status not in ("paid", "shipped", "completed"):
+        raise BusinessException(ErrCode.PARAM_ERROR, "当前订单状态不支持申请退款")
+
+    existing = db.query(RefundRequest).filter(
+        RefundRequest.order_id == order_id,
+        RefundRequest.status == "pending",
+        RefundRequest.deleted_at.is_(None),
+    ).first()
+    if existing:
+        raise BusinessException(ErrCode.PARAM_ERROR, "已有待处理的退款申请")
+
+    refund = RefundRequest(order_id=order_id, user_id=user_id, reason=reason, status="pending")
+    o.status = "refunding"
+    db.add(refund)
+    db.commit()
+    return {"refund_id": refund.id, "status": "pending", "message": "退款申请已提交，等待审核"}
+
+
+def svc_user_refunds(db: Session, user_id: int, page: int = 1, page_size: int = 10) -> dict:
+    q = db.query(RefundRequest).filter(
+        RefundRequest.user_id == user_id,
+        RefundRequest.deleted_at.is_(None),
+    )
+    total = q.count()
+    items = q.order_by(RefundRequest.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    return {
+        "items": [
+            {
+                "id": r.id,
+                "order_id": r.order_id,
+                "reason": r.reason,
+                "status": r.status,
+                "admin_note": r.admin_note,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in items
+        ],
+        "total": total,
+    }

@@ -32,6 +32,7 @@
             <el-button v-if="o.status === 'pending'" size="small" type="danger" plain @click="cancelOrder(o.id)">取消订单</el-button>
             <el-button v-if="o.status === 'shipped'" size="small" type="primary" @click="confirmOrder(o.id)">确认收货</el-button>
             <el-button v-if="o.status === 'completed'" size="small" type="success" plain @click="openReview(o)">写评价</el-button>
+            <el-button v-if="['paid','shipped','completed'].includes(o.status)" size="small" type="warning" plain @click="openRefund(o)">申请退款</el-button>
           </div>
         </div>
       </div>
@@ -58,6 +59,24 @@
         <el-button type="primary" :loading="reviewDialog.submitting" @click="submitReview">提交评价</el-button>
       </template>
     </el-dialog>
+
+    <!-- 退款弹框 -->
+    <el-dialog v-model="refundDialog.visible" title="申请退款" width="440px">
+      <div style="margin-bottom:12px">
+        <div style="font-size:14px;margin-bottom:8px;color:#666">订单号：{{ refundDialog.orderNo }}</div>
+        <div style="font-size:14px;margin-bottom:8px">退款原因（必填）：</div>
+        <el-input
+          v-model="refundDialog.reason"
+          type="textarea"
+          :rows="4"
+          placeholder="请描述退款原因，如：商品质量问题、不想要了等"
+        />
+      </div>
+      <template #footer>
+        <el-button @click="refundDialog.visible = false">取消</el-button>
+        <el-button type="warning" :loading="refundDialog.submitting" @click="submitRefund">提交申请</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -65,6 +84,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ordersApi } from '@/api/orders'
+
 const orders = ref<any[]>([])
 const loading = ref(false)
 const activeTab = ref('')
@@ -82,8 +102,8 @@ const reviewDialog = ref({
   submitting: false,
 })
 
-const statusMap: Record<string, string> = { pending: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消' }
-const tagMap: Record<string, string> = { pending: 'warning', paid: 'success', shipped: '', completed: 'info', cancelled: 'danger' }
+const statusMap: Record<string, string> = { pending: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消', refunding: '退款审核中', refunded: '已退款' }
+const tagMap: Record<string, string> = { pending: 'warning', paid: 'success', shipped: '', completed: 'info', cancelled: 'danger', refunding: 'warning', refunded: 'info' }
 const statusLabel = (s: string) => statusMap[s] || s
 const statusTag = (s: string) => (tagMap[s] ?? '') as any
 
@@ -135,6 +155,28 @@ async function submitReview() {
     })
     ElMessage.success('评价成功！')
     d.visible = false
+  } finally {
+    d.submitting = false
+  }
+}
+
+const refundDialog = ref({ visible: false, orderId: 0, orderNo: '', reason: '', submitting: false })
+
+function openRefund(order: any) {
+  refundDialog.value = { visible: true, orderId: order.id, orderNo: order.order_no, reason: '', submitting: false }
+}
+
+async function submitRefund() {
+  const d = refundDialog.value
+  if (!d.reason.trim()) { ElMessage.warning('请填写退款原因'); return }
+  d.submitting = true
+  try {
+    await ordersApi.requestRefund(d.orderId, d.reason)
+    ElMessage.success('退款申请已提交，请等待审核')
+    d.visible = false
+    load()
+  } catch (e: any) {
+    ElMessage.error(e?.response?.data?.message || '提交失败')
   } finally {
     d.submitting = false
   }

@@ -71,3 +71,50 @@ def update_address(addr_id: int, body: AddressCreate,
 def delete_address(addr_id: int, current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     user_service.svc_delete_address(db, current_user.id, addr_id)
     return success({"message": "删除成功"})
+
+
+# ---- 签到 ----
+
+@router.get("/checkin/status")
+def checkin_status(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    data = user_service.svc_checkin_status(db, current_user.id)
+    return success(data)
+
+
+@router.post("/checkin")
+def do_checkin(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    data = user_service.svc_do_checkin(db, current_user.id)
+    return success(data)
+
+
+# ---- 个人中心概览 ----
+
+@router.get("/user/dashboard")
+def user_dashboard(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
+    from app.models.order import Order
+    from app.models.points import PointsRecord
+    from sqlalchemy import func
+
+    user = db.get(current_user.__class__, current_user.id)
+
+    # 各状态订单数
+    status_counts = dict(
+        db.query(Order.status, func.count(Order.id))
+        .filter(Order.user_id == current_user.id, Order.deleted_at.is_(None))
+        .group_by(Order.status)
+        .all()
+    )
+
+    # 签到状态
+    checkin = user_service.svc_checkin_status(db, current_user.id)
+
+    return success({
+        "points_balance": current_user.points_balance,
+        "orders": {
+            "pending": status_counts.get("pending", 0),
+            "paid": status_counts.get("paid", 0),
+            "shipped": status_counts.get("shipped", 0),
+            "completed": status_counts.get("completed", 0),
+        },
+        "checkin": checkin,
+    })

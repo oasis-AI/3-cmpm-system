@@ -52,10 +52,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { cartApi } from '@/api/cart'
+import { useCartStore } from '@/stores/cart'
 
 interface CartItem { id: number; product_id: number; product_name: string; cover_image: string; sku_id: number; sku_name: string; points_price: number; quantity: number; checked: boolean }
 
 const router = useRouter()
+const cartStore = useCartStore()
 const loading = ref(true)
 const items = ref<CartItem[]>([])
 const allChecked = ref(false)
@@ -68,6 +70,7 @@ async function load() {
   try {
     const r: any = await cartApi.list()
     items.value = (r.data?.items || r.data || []).map((i: any) => ({ ...i, checked: true }))
+    cartStore.setCount(items.value.reduce((s, i) => s + i.quantity, 0))
     syncAll()
   } finally { loading.value = false }
 }

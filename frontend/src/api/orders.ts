@@ -45,4 +45,9 @@ export const ordersApi = {
   review(orderId: number, itemId: number, data: { rating: number; content?: string; is_anonymous?: boolean }) {
     return request.post(`/orders/${orderId}/items/${itemId}/review`, data)
   },
+
+  /** C端：申请退款 */
+  requestRefund(orderId: number, reason: string) {
+    return request.post(`/orders/${orderId}/refund`, { reason })
+  },
 }

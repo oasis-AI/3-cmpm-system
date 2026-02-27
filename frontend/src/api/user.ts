@@ -35,4 +35,24 @@ export const userApi = {
   adminList(params?: Record<string, any>) {
     return request.get('/admin/users', { params })
   },
+
+  /** 签到状态 */
+  checkinStatus() {
+    return request.get('/checkin/status')
+  },
+
+  /** 执行签到 */
+  checkin() {
+    return request.post('/checkin')
+  },
+
+  /** 个人中心概览 */
+  dashboard() {
+    return request.get('/user/dashboard')
+  },
+
+  /** 我的退款申请列表 */
+  refunds(params?: { page?: number; page_size?: number }) {
+    return request.get('/user/refunds', { params })
+  },
 }

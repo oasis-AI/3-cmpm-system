@@ -3,7 +3,8 @@
     <div class="layout-container">
       <!-- 分类侧边栏 -->
       <aside class="category-sidebar">
-        <div class="cat-item" :class="{ active: !selectedCat }" @click="selectCat(null)">全部商品</div>
+        <div class="cat-item cat-item-all" :class="{ active: !selectedCat }" @click="selectCat(null)">全部商品</div>
+        <div class="cat-divider"></div>
         <div
           v-for="cat in categories"
           :key="cat.id"
@@ -140,10 +141,12 @@ function doSearch() {
 <style scoped>
 .product-list-page { background: #f5f5f5; min-height: calc(100vh - 100px); padding: 16px 0; }
 .layout-container { max-width: 1200px; margin: 0 auto; padding: 0 12px; display: flex; gap: 16px; }
-.category-sidebar { width: 140px; flex-shrink: 0; background: #fff; border-radius: 8px; padding: 8px 0; align-self: flex-start; position: sticky; top: 80px; }
-.cat-item { padding: 10px 16px; font-size: 14px; cursor: pointer; color: #444; transition: all .15s; }
-.cat-item:hover { background: #f0f9f5; color: #00a854; }
-.cat-item.active { background: #00a854; color: #fff; font-weight: 600; }
+.category-sidebar { width: 150px; flex-shrink: 0; background: #fff; border-radius: 8px; overflow: hidden; align-self: flex-start; position: sticky; top: 80px; padding: 4px 0; }
+.cat-item-all { font-weight: 600; color: #00a854 !important; }
+.cat-divider { height: 1px; background: #f0f0f0; margin: 4px 12px; }
+.cat-item { padding: 10px 16px; font-size: 13px; cursor: pointer; color: #555; transition: all .15s; }
+.cat-item:hover { background: #f0f9f5; color: #00a854; padding-left: 20px; }
+.cat-item.active { background: #f0f9f5; color: #00a854; font-weight: 600; border-left: 3px solid #00a854; padding-left: 13px; }
 .product-main { flex: 1; }
 .toolbar { background: #fff; border-radius: 8px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; }
 .result-count { margin-left: 12px; font-size: 13px; color: #888; }

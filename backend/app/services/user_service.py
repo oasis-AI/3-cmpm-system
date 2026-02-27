@@ -1,4 +1,5 @@
 import uuid
+from datetime import date, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
 
@@ -7,6 +8,7 @@ from app.models.user import User
 from app.models.address import Address
 from app.models.points import PointsRecord, PointsRule
 from app.models.quick_recharge import PhoneRechargeOrder
+from app.models.checkin import CheckIn
 
 
 def svc_points_balance(db: Session, user_id: int) -> dict:
@@ -150,4 +152,87 @@ def _addr_dict(a: Address) -> dict:
         "district": a.district,
         "detail": a.detail,
         "is_default": a.is_default,
+    }
+
+
+# ---- 签到 ----
+
+def _checkin_points(streak: int) -> int:
+    """连签奖励：1-6天10分，7天翻倍20分，以7天为周期"""
+    return 20 if streak % 7 == 0 else 10
+
+
+def svc_checkin_status(db: Session, user_id: int) -> dict:
+    today = date.today()
+    today_record = db.query(CheckIn).filter(
+        CheckIn.user_id == user_id,
+        CheckIn.check_date == today,
+        CheckIn.deleted_at.is_(None),
+    ).first()
+
+    # 计算当前连签天数
+    streak = 0
+    if today_record:
+        streak = today_record.streak_days
+    else:
+        yesterday = db.query(CheckIn).filter(
+            CheckIn.user_id == user_id,
+            CheckIn.check_date == today - timedelta(days=1),
+            CheckIn.deleted_at.is_(None),
+        ).first()
+        streak = (yesterday.streak_days if yesterday else 0)
+
+    user = db.get(User, user_id)
+    return {
+        "checked_in_today": today_record is not None,
+        "streak_days": streak if not today_record else today_record.streak_days,
+        "next_points": _checkin_points((streak + 1) if not today_record else streak + 1),
+        "points_balance": user.points_balance if user else 0,
+    }
+
+
+def svc_do_checkin(db: Session, user_id: int) -> dict:
+    today = date.today()
+    existing = db.query(CheckIn).filter(
+        CheckIn.user_id == user_id,
+        CheckIn.check_date == today,
+        CheckIn.deleted_at.is_(None),
+    ).first()
+    if existing:
+        raise BusinessException(ErrCode.PARAM_ERROR, "今日已签到")
+
+    # 计算连签天数
+    yesterday_rec = db.query(CheckIn).filter(
+        CheckIn.user_id == user_id,
+        CheckIn.check_date == today - timedelta(days=1),
+        CheckIn.deleted_at.is_(None),
+    ).first()
+    streak = (yesterday_rec.streak_days + 1) if yesterday_rec else 1
+    points = _checkin_points(streak)
+
+    user = db.get(User, user_id)
+    if not user:
+        raise BusinessException(ErrCode.NOT_FOUND, "用户不存在")
+
+    user.points_balance += points
+    db.add(CheckIn(
+        user_id=user_id,
+        check_date=today,
+        points_earned=points,
+        streak_days=streak,
+    ))
+    db.add(PointsRecord(
+        user_id=user_id,
+        type="checkin",
+        amount=points,
+        balance_after=user.points_balance,
+        description=f"每日签到（连签第{streak}天）",
+    ))
+    db.commit()
+
+    return {
+        "points_earned": points,
+        "streak_days": streak,
+        "balance_after": user.points_balance,
+        "message": f"签到成功！获得 {points} 积分，连签第 {streak} 天",
     }

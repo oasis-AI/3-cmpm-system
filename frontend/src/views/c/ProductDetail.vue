@@ -106,10 +106,12 @@ import { ShoppingCart } from '@element-plus/icons-vue'
 import { productsApi } from '@/api/products'
 import { cartApi } from '@/api/cart'
 import { useAuthStore } from '@/stores/auth'
+import { useCartStore } from '@/stores/cart'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const cartStore = useCartStore()
 const loading = ref(true)
 const product = ref<any>(null)
 const selectedSku = ref<any>(null)
@@ -152,6 +154,7 @@ async function addCart() {
   if (!authStore.isLoggedIn) { router.push('/login'); return }
   if (!selectedSku.value) { ElMessage.warning('请选择规格'); return }
   await cartApi.add({ sku_id: selectedSku.value.id, quantity: qty.value })
+  cartStore.increment()
   ElMessage.success('已加入购物车')
 }
 

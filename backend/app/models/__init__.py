@@ -12,6 +12,8 @@ from app.models.review import Review
 from app.models.activity import Activity, ActivityProduct, ActivityParticipant
 from app.models.announcement import Announcement
 from app.models.quick_recharge import PhoneRechargeOrder
+from app.models.checkin import CheckIn
+from app.models.refund import RefundRequest
 
 __all__ = [
     "Base",
@@ -34,4 +36,6 @@ __all__ = [
     "ActivityParticipant",
     "Announcement",
     "PhoneRechargeOrder",
+    "CheckIn",
+    "RefundRequest",
 ]

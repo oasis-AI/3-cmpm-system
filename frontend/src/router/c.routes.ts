@@ -19,6 +19,7 @@ const cRoutes: RouteRecordRaw[] = [
         path: 'user',
         meta: { requiresAuth: true },
         children: [
+          { path: '', name: 'UserDashboard', component: () => import('@/views/c/user/Dashboard.vue') },
           { path: 'profile', name: 'UserProfile', component: () => import('@/views/c/user/Profile.vue') },
           { path: 'points', name: 'UserPoints', component: () => import('@/views/c/user/Points.vue') },
           { path: 'orders', name: 'UserOrders', component: () => import('@/views/c/user/Orders.vue') },

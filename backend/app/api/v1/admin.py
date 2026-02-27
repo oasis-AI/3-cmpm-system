@@ -169,3 +169,82 @@ def list_announcements(
 ):
     result = admin_service.svc_list_announcements(db, page, page_size)
     return paginated(result["items"], result["total"], page, page_size)
+
+
+@router.get("/announcements/{ann_id}")
+def get_announcement(ann_id: int, db: Session = Depends(get_db)):
+    from app.models.announcement import Announcement
+    from app.core.exceptions import BusinessException, ErrCode
+    ann = db.query(Announcement).filter(Announcement.id == ann_id, Announcement.deleted_at.is_(None)).first()
+    if not ann:
+        raise BusinessException(ErrCode.NOT_FOUND, "公告不存在")
+    return success({
+        "id": ann.id, "title": ann.title, "content": ann.content,
+        "is_pinned": ann.is_pinned,
+        "created_at": ann.created_at.isoformat() if ann.created_at else None,
+    })
+
+
+# ---- 退款管理 ----
+
+@router.get("/admin/refunds")
+def admin_list_refunds(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    status: Optional[str] = None,
+    current_user=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    from app.models.refund import RefundRequest
+    from sqlalchemy import func
+    q = db.query(RefundRequest).filter(RefundRequest.deleted_at.is_(None))
+    if status:
+        q = q.filter(RefundRequest.status == status)
+    total = q.count()
+    items = q.order_by(RefundRequest.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    return paginated(
+        [{"id": r.id, "order_id": r.order_id, "user_id": r.user_id, "reason": r.reason,
+          "status": r.status, "admin_note": r.admin_note,
+          "created_at": r.created_at.isoformat() if r.created_at else None}
+         for r in items],
+        total, page, page_size
+    )
+
+
+@router.post("/admin/refunds/{refund_id}/approve")
+def admin_approve_refund(
+    refund_id: int,
+    body: dict,
+    current_user=Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    from app.models.refund import RefundRequest
+    from app.models.order import Order
+    from app.models.user import User
+    from app.models.points import PointsRecord
+    refund = db.query(RefundRequest).filter(RefundRequest.id == refund_id, RefundRequest.deleted_at.is_(None)).first()
+    if not refund or refund.status != "pending":
+        from app.core.exceptions import BusinessException, ErrCode
+        raise BusinessException(ErrCode.NOT_FOUND, "退款申请不存在或已处理")
+    action = body.get("action")  # "approve" or "reject"
+    refund.admin_note = body.get("note", "")
+    order = db.get(Order, refund.order_id)
+    if action == "approve":
+        refund.status = "approved"
+        if order:
+            refund_points = order.total_points
+            user = db.get(User, refund.user_id)
+            if user:
+                user.points_balance += refund_points
+                db.add(PointsRecord(
+                    user_id=user.id, type="refund", amount=refund_points,
+                    balance_after=user.points_balance,
+                    description=f"订单 {order.order_no} 退款返还",
+                ))
+            order.status = "refunded"
+    else:
+        refund.status = "rejected"
+        if order:
+            order.status = "completed"
+    db.commit()
+    return success({"message": "处理成功", "status": refund.status})

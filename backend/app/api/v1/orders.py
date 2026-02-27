@@ -124,3 +124,30 @@ def create_review(
         is_anonymous=body.get("is_anonymous", False),
     )
     return success(result)
+
+
+# ---- Refunds ----
+@router.post("/orders/{order_id}/refund")
+def request_refund(
+    order_id: int,
+    body: dict,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    reason = body.get("reason", "")
+    if not reason:
+        from app.core.exceptions import BusinessException, ErrCode
+        raise BusinessException(ErrCode.PARAM_ERROR, "请填写退款原因")
+    result = order_service.svc_request_refund(db, current_user.id, order_id, reason)
+    return success(result)
+
+
+@router.get("/user/refunds")
+def list_refunds(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=50),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    result = order_service.svc_user_refunds(db, current_user.id, page, page_size)
+    return paginated(result["items"], result["total"], page, page_size)
