@@ -3,7 +3,7 @@
     <div class="recharge-container">
       <div class="page-title">话费/流量充值</div>
       <div class="balance-tip">当前积分：<b>{{ balance?.toLocaleString() }}</b></div>
-      <el-tabs v-model="tab">
+      <el-tabs v-model="tab" @tab-change="form.amount = tab === 'phone' ? 10 : 5">
         <el-tab-pane label="话费充值" name="phone" />
         <el-tab-pane label="流量充值" name="data" />
       </el-tabs>
@@ -53,11 +53,12 @@ const phoneOpts = [
   { label: '50元话费', value: 50, points: 4800 },
   { label: '100元话费', value: 100, points: 9500 },
 ]
+// 流量选项的 value 统一用"积分等价元数"（points/100），保持接口一致
 const dataOpts = [
-  { label: '100MB流量', value: 100, points: 500 },
-  { label: '500MB流量', value: 500, points: 2000 },
-  { label: '1GB流量', value: 1000, points: 3500 },
-  { label: '5GB流量', value: 5000, points: 15000 },
+  { label: '100MB流量', value: 5, points: 500 },
+  { label: '500MB流量', value: 20, points: 2000 },
+  { label: '1GB流量', value: 35, points: 3500 },
+  { label: '5GB流量', value: 150, points: 15000 },
 ]
 
 onMounted(async () => {
@@ -69,10 +70,10 @@ async function submit() {
   if (!form.value.phone) { ElMessage.warning('请输入手机号'); return }
   submitting.value = true
   try {
-    await pointsApi.quickRecharge({ phone: form.value.phone, type: tab.value as 'phone' | 'data', amount: form.value.amount })
-    ElMessage.success('充值成功！')
-    const r: any = await pointsApi.balance()
-    balance.value = r.data?.balance ?? 0
+    const r: any = await pointsApi.quickRecharge({ phone: form.value.phone, type: tab.value as 'phone' | 'data', amount: form.value.amount })
+    ElMessage.success(`充值成功！消耗 ${r.data?.points_cost?.toLocaleString() || ''} 积分`)
+    const br: any = await pointsApi.balance()
+    balance.value = br.data?.balance ?? 0
   } finally { submitting.value = false }
 }
 </script>

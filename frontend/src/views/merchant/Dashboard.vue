@@ -1,6 +1,22 @@
 <template>
   <div>
     <div class="page-title">商户控制台</div>
+
+    <!-- 低库存预警横幅 -->
+    <el-alert
+      v-if="lowStockCount > 0"
+      :title="`库存预警：有 ${lowStockCount} 个 SKU 库存不足 10 件，请尽快补货`"
+      type="warning"
+      show-icon
+      :closable="false"
+      style="margin-bottom:16px"
+    >
+      <template #default>
+        <el-button size="small" type="warning" plain style="margin-left:8px" @click="$router.push('/merchant/inventory')">
+          查看库存
+        </el-button>
+      </template>
+    </el-alert>
     <el-row :gutter="16" class="stats-row" v-loading="loading">
       <el-col :span="6" v-for="s in stats" :key="s.label">
         <el-card class="stat-card">
@@ -55,6 +71,7 @@ const stats = ref([
 ])
 const recentOrders = ref<any[]>([])
 const lowStock = ref<any[]>([])
+const lowStockCount = ref(0)
 
 onMounted(async () => {
   loading.value = true
@@ -69,9 +86,11 @@ onMounted(async () => {
     const pending = recentOrders.value.filter((o: any) => o.status === 'paid').length
     stats.value[2].value = String(pending)
     // low-stock：库存<10 从任意sku里筛
-    lowStock.value = products.flatMap((p: any) =>
-      (p.skus || []).filter((s: any) => s.stock < 20).map((s: any) => ({ product_name: p.name, sku_name: s.sku_name, stock: s.stock }))
-    ).slice(0, 6)
+    const allLowStock = products.flatMap((p: any) =>
+      (p.skus || []).filter((s: any) => (s.stock ?? 99) < 10).map((s: any) => ({ product_name: p.name, sku_name: s.sku_name, stock: s.stock ?? 0 }))
+    )
+    lowStockCount.value = allLowStock.length
+    lowStock.value = allLowStock.slice(0, 6)
   } finally { loading.value = false }
 })
 </script>

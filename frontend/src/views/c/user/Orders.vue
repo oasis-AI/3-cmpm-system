@@ -31,6 +31,7 @@
           <div class="action-btns">
             <el-button v-if="o.status === 'pending'" size="small" type="danger" plain @click="cancelOrder(o.id)">取消订单</el-button>
             <el-button v-if="o.status === 'shipped'" size="small" type="primary" @click="confirmOrder(o.id)">确认收货</el-button>
+            <el-button v-if="o.status === 'completed'" size="small" type="success" plain @click="openReview(o)">写评价</el-button>
           </div>
         </div>
       </div>
@@ -38,6 +39,25 @@
     <div class="pagination-wrap">
       <el-pagination background layout="prev,pager,next" :total="total" :page-size="10" v-model:current-page="page" @update:current-page="load" />
     </div>
+
+    <!-- 评价弹框 -->
+    <el-dialog v-model="reviewDialog.visible" title="写评价" width="480px">
+      <div style="margin-bottom:12px">
+        <div style="font-size:14px;margin-bottom:8px">商品：{{ reviewDialog.itemName }}</div>
+        <div style="margin-bottom:8px">评分：<el-rate v-model="reviewDialog.rating" /></div>
+        <el-input
+          v-model="reviewDialog.content"
+          type="textarea"
+          :rows="4"
+          placeholder="分享你的使用感受（选填）"
+        />
+        <el-checkbox v-model="reviewDialog.isAnonymous" style="margin-top:8px">匿名评价</el-checkbox>
+      </div>
+      <template #footer>
+        <el-button @click="reviewDialog.visible = false">取消</el-button>
+        <el-button type="primary" :loading="reviewDialog.submitting" @click="submitReview">提交评价</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -45,12 +65,22 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ordersApi } from '@/api/orders'
-
 const orders = ref<any[]>([])
 const loading = ref(false)
 const activeTab = ref('')
 const page = ref(1)
 const total = ref(0)
+
+const reviewDialog = ref({
+  visible: false,
+  orderId: 0,
+  itemId: 0,
+  itemName: '',
+  rating: 5,
+  content: '',
+  isAnonymous: false,
+  submitting: false,
+})
 
 const statusMap: Record<string, string> = { pending: '待支付', paid: '已支付', shipped: '已发货', completed: '已完成', cancelled: '已取消' }
 const tagMap: Record<string, string> = { pending: 'warning', paid: 'success', shipped: '', completed: 'info', cancelled: 'danger' }
@@ -77,6 +107,37 @@ async function confirmOrder(id: number) {
   await ordersApi.confirm(id)
   ElMessage.success('已确认收货')
   load()
+}
+
+function openReview(order: any) {
+  const item = order.items?.[0]
+  reviewDialog.value = {
+    visible: true,
+    orderId: order.id,
+    itemId: item?.id || 0,
+    itemName: item ? `${item.product_name} ${item.sku_name || ''}`.trim() : order.order_no,
+    rating: 5,
+    content: '',
+    isAnonymous: false,
+    submitting: false,
+  }
+}
+
+async function submitReview() {
+  const d = reviewDialog.value
+  if (!d.itemId) { ElMessage.warning('无法获取订单商品信息'); return }
+  d.submitting = true
+  try {
+    await ordersApi.review(d.orderId, d.itemId, {
+      rating: d.rating,
+      content: d.content,
+      is_anonymous: d.isAnonymous,
+    })
+    ElMessage.success('评价成功！')
+    d.visible = false
+  } finally {
+    d.submitting = false
+  }
 }
 
 onMounted(load)

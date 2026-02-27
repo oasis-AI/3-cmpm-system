@@ -6,7 +6,7 @@ from app.core.database import get_db
 from app.core.deps import get_current_user
 from app.core.response import success, paginated
 from app.schemas.order import AddCartRequest, UpdateCartRequest, CreateOrderRequest, ShipRequest
-from app.services import order_service
+from app.services import order_service, review_service
 
 router = APIRouter(tags=["cart & orders"])
 
@@ -54,7 +54,7 @@ def create_order(body: CreateOrderRequest, current_user=Depends(get_current_user
 def list_orders(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=50),
-    status: Optional[int] = None,
+    status: Optional[str] = None,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -85,7 +85,7 @@ def confirm_order(order_id: int, current_user=Depends(get_current_user), db: Ses
 def merchant_list_orders(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=50),
-    status: Optional[int] = None,
+    status: Optional[str] = None,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -103,3 +103,24 @@ def ship_order(order_id: int, body: ShipRequest,
     m = db.query(Merchant).filter(Merchant.user_id == current_user.id, Merchant.deleted_at.is_(None)).first()
     order_service.svc_ship_order(db, order_id, m.id if m else -1, body.express_company, body.express_no)
     return success({"message": "发货成功"})
+
+
+# ---- Reviews ----
+@router.post("/orders/{order_id}/items/{item_id}/review")
+def create_review(
+    order_id: int,
+    item_id: int,
+    body: dict,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    result = review_service.svc_create_review(
+        db,
+        user_id=current_user.id,
+        order_id=order_id,
+        order_item_id=item_id,
+        rating=body.get("rating", 5),
+        content=body.get("content"),
+        is_anonymous=body.get("is_anonymous", False),
+    )
+    return success(result)

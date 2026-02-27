@@ -79,18 +79,23 @@ async function loginByPass() {
 
     // 拉取用户信息
     const profile: any = await authApi.profile()
-    authStore.setUserInfo(profile.data)
+    const userInfo = profile.data
+    authStore.setUserInfo(userInfo)
 
     ElMessage.success('登录成功')
     const redirect = route.query.redirect as string
     // 根据角色跳转
-    if (profile.data.role === 'admin') {
-      router.push(redirect || '/admin')
-    } else if (profile.data.role === 'merchant') {
-      router.push(redirect || '/merchant')
+    if (userInfo.role === 'admin') {
+      router.replace(redirect || '/admin')
+    } else if (userInfo.role === 'merchant') {
+      router.replace(redirect || '/merchant/dashboard')
     } else {
-      router.push(redirect || '/')
+      router.replace(redirect || '/')
     }
+  } catch (err: any) {
+    // 登录失败或 profile 获取失败，清理 token
+    authStore.logout()
+    console.error('[login error]', err)
   } finally {
     loading.value = false
   }

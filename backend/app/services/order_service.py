@@ -130,7 +130,7 @@ def svc_create_order(db: Session, user_id: int, sku_id: int, quantity: int, addr
 
     # 检查库存
     inv = db.query(Inventory).filter(Inventory.sku_id == sku_id).first()
-    if not inv or inv.available_stock < quantity:
+    if not inv or (inv.quantity - inv.locked_quantity) < quantity:
         raise BusinessException(ErrCode.STOCK_INSUFFICIENT, "库存不足")
 
     # 检查积分
@@ -193,9 +193,8 @@ def svc_create_order(db: Session, user_id: int, sku_id: int, quantity: int, addr
         ref_id=order.id,
     ))
 
-    # 扣库存
-    inv.available_stock -= quantity
-    inv.locked_stock += quantity
+    # 扣库存（锁定）
+    inv.locked_quantity += quantity
 
     # 商品销量
     p.total_sales = (p.total_sales or 0) + quantity
@@ -283,8 +282,7 @@ def svc_cancel_order(db: Session, order_id: int, user_id: int) -> None:
     for it in items:
         inv = db.query(Inventory).filter(Inventory.sku_id == it.sku_id).first()
         if inv:
-            inv.available_stock += it.quantity
-            inv.locked_stock = max(0, inv.locked_stock - it.quantity)
+            inv.locked_quantity = max(0, inv.locked_quantity - it.quantity)
 
     o.status = "cancelled"
     db.commit()

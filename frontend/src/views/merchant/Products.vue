@@ -36,6 +36,11 @@
     <el-dialog v-model="dialogVisible" :title="editItem ? '编辑商品' : '发布商品'" width="600px">
       <el-form :model="form" label-width="90px" style="padding-right:20px">
         <el-form-item label="商品名称"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item label="商品分类">
+          <el-select v-model="form.category_id" placeholder="请选择分类" style="width:100%">
+            <el-option v-for="c in categories" :key="c.id" :label="c.name" :value="c.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="封面图URL"><el-input v-model="form.cover_image" /></el-form-item>
         <el-form-item label="积分价格"><el-input-number v-model="form.points_price" :min="1" /></el-form-item>
         <el-form-item label="品牌"><el-input v-model="form.brand" /></el-form-item>
@@ -61,7 +66,8 @@ const total = ref(0)
 const dialogVisible = ref(false)
 const editItem = ref<any>(null)
 const saving = ref(false)
-const form = ref({ name: '', cover_image: '', points_price: 100, brand: '', description: '' })
+const categories = ref<any[]>([])
+const form = ref({ name: '', category_id: null as number | null, cover_image: '', points_price: 100, brand: '', description: '' })
 
 async function load() {
   loading.value = true
@@ -73,7 +79,9 @@ async function load() {
 }
 function openDialog(item?: any) {
   editItem.value = item || null
-  form.value = item ? { name: item.name, cover_image: item.cover_image, points_price: item.points_price || item.min_points, brand: item.brand, description: item.description } : { name: '', cover_image: '', points_price: 100, brand: '', description: '' }
+  form.value = item
+    ? { name: item.name, category_id: item.category_id || null, cover_image: item.cover_image, points_price: item.points_price || item.min_points, brand: item.brand, description: item.description }
+    : { name: '', category_id: null, cover_image: '', points_price: 100, brand: '', description: '' }
   dialogVisible.value = true
 }
 async function save() {
@@ -94,7 +102,13 @@ async function del(id: number) {
   await ElMessageBox.confirm('确认删除该商品？', '提示', { type: 'warning' })
   await productsApi.delete(id); ElMessage.success('已删除'); load()
 }
-onMounted(load)
+async function loadCategories() {
+  try {
+    const r: any = await productsApi.categories()
+    categories.value = r.data || []
+  } catch {}
+}
+onMounted(() => { load(); loadCategories() })
 </script>
 
 <style scoped>

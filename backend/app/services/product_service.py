@@ -4,6 +4,7 @@ from sqlalchemy import text
 
 from app.core.exceptions import BusinessException, ErrCode
 from app.models.product import Product, ProductSku, Category, ProductImage
+from app.models.inventory import Inventory
 
 
 def svc_list_categories(db: Session) -> List[dict]:
@@ -21,13 +22,11 @@ def svc_list_products(
     min_points: Optional[int] = None,
     max_points: Optional[int] = None,
     merchant_id: Optional[int] = None,
-    status: Optional[int] = None,
+    status: Optional[str] = None,
 ) -> dict:
     query = db.query(Product).filter(Product.deleted_at.is_(None))
     if status is not None:
-        # accept int shorthand: 1=on_sale, 0=off_shelf
-        status_str = {1: "on_sale", 0: "off_shelf"}.get(status, str(status))
-        query = query.filter(Product.status == status_str)
+        query = query.filter(Product.status == status)
     elif merchant_id is None:
         query = query.filter(Product.status == "on_sale")
     if category_id:
@@ -67,6 +66,22 @@ def svc_list_products(
             ProductSku.deleted_at.is_(None),
         ).order_by(ProductSku.points_price.asc()).first()
 
+        skus_data = []
+        if merchant_id:
+            all_skus = db.query(ProductSku).filter(
+                ProductSku.product_id == p.id,
+                ProductSku.deleted_at.is_(None),
+            ).all()
+            skus_data = [
+                {
+                    "id": s.id,
+                    "sku_name": s.sku_name,
+                    "points_price": s.points_price,
+                    "stock": _sku_available_stock(db, s.id),
+                }
+                for s in all_skus
+            ]
+
         items.append({
             "id": p.id,
             "name": p.name,
@@ -80,6 +95,7 @@ def svc_list_products(
             "brand": p.brand,
             "tags": p.tags,
             "good_review_rate": float(p.good_review_rate),
+            **({"skus": skus_data} if merchant_id else {}),
         })
 
     return {"items": items, "total": total, "page": page, "page_size": page_size}
@@ -122,10 +138,18 @@ def svc_get_product(db: Session, product_id: int) -> dict:
                 "sku_name": s.sku_name,
                 "points_price": s.points_price,
                 "cash_supplement": float(s.cash_supplement),
+                "stock": _sku_available_stock(db, s.id),
             }
             for s in skus
         ],
     }
+
+
+def _sku_available_stock(db: Session, sku_id: int) -> int:
+    inv = db.query(Inventory).filter(Inventory.sku_id == sku_id).first()
+    if not inv:
+        return 0
+    return max(0, inv.quantity - inv.locked_quantity)
 
 
 def svc_merchant_create_product(db: Session, merchant_id: int, data: dict) -> dict:
@@ -133,7 +157,7 @@ def svc_merchant_create_product(db: Session, merchant_id: int, data: dict) -> di
     product = Product(
         merchant_id=merchant_id,
         name=data["name"],
-        category_id=data["category_id"],
+        category_id=data.get("category_id") or 0,
         description=data.get("description"),
         cover_image=data.get("cover_image", ""),
         min_points=data.get("points_price", 0),

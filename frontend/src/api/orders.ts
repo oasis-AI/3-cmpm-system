@@ -40,4 +40,9 @@ export const ordersApi = {
   adminList(params?: Record<string, any>) {
     return request.get('/admin/orders', { params })
   },
+
+  /** C端：提交评价 */
+  review(orderId: number, itemId: number, data: { rating: number; content?: string; is_anonymous?: boolean }) {
+    return request.post(`/orders/${orderId}/items/${itemId}/review`, data)
+  },
 }

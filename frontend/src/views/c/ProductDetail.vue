@@ -58,6 +58,42 @@
         <div class="section-title">商品详情</div>
         <div class="description-content">{{ product.description }}</div>
       </div>
+
+      <!-- 商品评价 -->
+      <div class="description-section" style="margin-top:16px">
+        <div class="section-title">
+          用户评价
+          <span class="avg-rating" v-if="reviewData.avg_rating">
+            <el-rate :model-value="reviewData.avg_rating" disabled allow-half show-score />
+            （{{ reviewData.total }} 条）
+          </span>
+          <span v-else style="font-size:13px;color:#bbb;font-weight:400;margin-left:12px">暂无评价</span>
+        </div>
+        <div v-if="reviewData.items.length">
+          <div v-for="r in reviewData.items" :key="r.id" class="review-item">
+            <div class="review-header">
+              <el-avatar :size="32" style="flex-shrink:0">{{ r.nickname.charAt(0) }}</el-avatar>
+              <div>
+                <div class="review-user">{{ r.nickname }}</div>
+                <el-rate :model-value="r.rating" disabled size="small" />
+              </div>
+              <span class="review-time">{{ r.created_at?.slice(0, 10) }}</span>
+            </div>
+            <div class="review-content">{{ r.content || '该用户没有填写评价' }}</div>
+          </div>
+          <div class="pagination-wrap">
+            <el-pagination
+              background
+              layout="prev,pager,next"
+              :total="reviewData.total"
+              :page-size="10"
+              v-model:current-page="reviewPage"
+              @update:current-page="loadReviews"
+            />
+          </div>
+        </div>
+        <el-empty v-else description="暂无评价，快来抢占沙发！" :image-size="80" />
+      </div>
     </div>
   </div>
 </template>
@@ -79,6 +115,10 @@ const product = ref<any>(null)
 const selectedSku = ref<any>(null)
 const activeImg = ref('')
 const qty = ref(1)
+const reviewPage = ref(1)
+const reviewData = ref<{ items: any[]; total: number; avg_rating: number | null }>({
+  items: [], total: 0, avg_rating: null,
+})
 
 onMounted(async () => {
   try {
@@ -87,7 +127,6 @@ onMounted(async () => {
     if (product.value.skus?.length) {
       selectedSku.value = product.value.skus[0]
     } else {
-      // 无 SKU：用商品本身作为默认选项
       selectedSku.value = {
         id: product.value.id,
         sku_name: '默认',
@@ -96,10 +135,18 @@ onMounted(async () => {
       }
     }
     if (product.value.images?.length) activeImg.value = product.value.images[0].url
+    await loadReviews()
   } finally {
     loading.value = false
   }
 })
+
+async function loadReviews() {
+  try {
+    const r: any = await productsApi.reviews(Number(route.params.id), { page: reviewPage.value, page_size: 10 })
+    reviewData.value = r.data ?? { items: [], total: 0, avg_rating: null }
+  } catch {}
+}
 
 async function addCart() {
   if (!authStore.isLoggedIn) { router.push('/login'); return }
@@ -141,5 +188,13 @@ async function buyNow() {
 .description-section { background: #fff; border-radius: 8px; padding: 24px; margin-top: 16px; }
 .section-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; border-left: 4px solid #00a854; padding-left: 12px; }
 .description-content { font-size: 14px; color: #555; line-height: 1.8; white-space: pre-wrap; }
+.avg-rating { display: inline-flex; align-items: center; gap: 4px; margin-left: 12px; font-size: 13px; font-weight: 400; }
+.review-item { padding: 16px 0; border-bottom: 1px solid #f5f5f5; }
+.review-item:last-child { border: none; }
+.review-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.review-user { font-size: 13px; font-weight: 600; }
+.review-time { margin-left: auto; font-size: 12px; color: #bbb; }
+.review-content { font-size: 14px; color: #555; padding-left: 42px; }
+.pagination-wrap { display: flex; justify-content: center; margin-top: 12px; }
 </style>
 

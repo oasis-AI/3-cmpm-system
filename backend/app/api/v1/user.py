@@ -22,7 +22,7 @@ def points_balance(current_user=Depends(get_current_user), db: Session = Depends
 def points_records(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    type: Optional[int] = None,
+    type: Optional[str] = None,
     current_user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

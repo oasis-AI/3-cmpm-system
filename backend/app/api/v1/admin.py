@@ -49,7 +49,7 @@ def admin_users(
 def admin_merchants(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    status: Optional[int] = None,
+    status: Optional[str] = None,
     current_user=Depends(require_admin),
     db: Session = Depends(get_db),
 ):

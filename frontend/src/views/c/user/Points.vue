@@ -17,7 +17,7 @@
         <el-table-column label="积分余额" prop="balance_after" width="120">
           <template #default="{ row }">{{ row.balance_after?.toLocaleString() }}</template>
         </el-table-column>
-        <el-table-column label="说明" prop="remark" />
+        <el-table-column label="说明" prop="description" />
         <el-table-column label="时间" prop="created_at" width="160">
           <template #default="{ row }">{{ row.created_at?.slice(0, 16) }}</template>
         </el-table-column>
@@ -39,7 +39,16 @@ const loading = ref(false)
 const page = ref(1)
 const total = ref(0)
 
-const typeMap: Record<string, string> = { register: '注册奖励', exchange: '积分兑换', refund: '退款返还', recharge: '充值', admin: '管理员调整', expire: '积分过期' }
+const typeMap: Record<string, string> = {
+  register: '注册奖励',
+  exchange: '积分兑换',
+  refund: '退款返还',
+  recharge: '充值',
+  phone_recharge: '话费充值',
+  flow_recharge: '流量充值',
+  admin: '管理员调整',
+  expire: '积分过期',
+}
 const typeLabel = (t: string) => typeMap[t] || t
 
 async function loadBalance() {

@@ -4,7 +4,6 @@
       <div class="header-inner">
         <!-- Logo -->
         <router-link to="/" class="logo">
-        <img src="@/assets/logo.svg" alt="积分商城" />
           <span class="logo-text">积分商城</span>
         </router-link>
 
@@ -72,9 +71,12 @@
         <div class="nav-inner">
           <router-link to="/" class="nav-item">首页</router-link>
           <router-link to="/products" class="nav-item">全部商品</router-link>
-          <router-link to="/products?category=phone" class="nav-item">话费流量</router-link>
-          <router-link to="/products?category=life" class="nav-item">生活用品</router-link>
-          <router-link to="/products?category=digital" class="nav-item">数码电器</router-link>
+          <router-link
+            v-for="cat in categories"
+            :key="cat.id"
+            :to="{ path: '/products', query: { category_id: cat.id } }"
+            class="nav-item"
+          >{{ cat.name }}</router-link>
           <router-link to="/activities" class="nav-item">限时活动</router-link>
           <router-link to="/recharge" class="nav-item highlight">快速充值</router-link>
         </div>
@@ -99,18 +101,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Search, Phone, ShoppingCart } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import { authApi } from '@/api/auth'
+import { productsApi } from '@/api/products'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const cartStore = useCartStore()
 const keyword = ref('')
+const categories = ref<{ id: number; name: string }[]>([])
+
+onMounted(async () => {
+  try {
+    const res = await productsApi.categories()
+    categories.value = res.data?.data ?? []
+  } catch {}
+})
 
 function doSearch() {
   if (keyword.value.trim()) {
@@ -185,6 +196,7 @@ async function handleUserCmd(cmd: string) {
   align-items: center;
   gap: 16px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .action-link {

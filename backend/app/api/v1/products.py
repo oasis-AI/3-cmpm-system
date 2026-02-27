@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_merchant
 from app.core.response import success, paginated
-from app.services import product_service
+from app.services import product_service, review_service
 
 router = APIRouter(tags=["products"])
 
@@ -41,12 +41,22 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     return success(data)
 
 
+@router.get("/products/{product_id}/reviews")
+def get_product_reviews(
+    product_id: int,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    result = review_service.svc_get_product_reviews(db, product_id, page, page_size)
+    return success(result)
+
 # ---- Merchant B端 ----
 @router.get("/merchant/products")
 def merchant_list_products(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
-    status: Optional[int] = None,
+    status: Optional[str] = None,
     current_user=Depends(require_merchant),
     db: Session = Depends(get_db),
 ):

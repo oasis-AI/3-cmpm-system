@@ -15,7 +15,7 @@ def svc_points_balance(db: Session, user_id: int) -> dict:
 
 
 def svc_points_records(db: Session, user_id: int, page: int = 1, page_size: int = 20,
-                       type: Optional[int] = None) -> dict:
+                       type: Optional[str] = None) -> dict:
     q = db.query(PointsRecord).filter(PointsRecord.user_id == user_id)
     if type is not None:
         q = q.filter(PointsRecord.type == type)

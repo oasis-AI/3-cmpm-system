@@ -72,7 +72,7 @@ def svc_admin_users(db: Session, page: int = 1, page_size: int = 20, keyword: Op
 
 
 def svc_admin_merchants(db: Session, page: int = 1, page_size: int = 20,
-                         status: Optional[int] = None) -> dict:
+                         status: Optional[str] = None) -> dict:
     q = db.query(Merchant).filter(Merchant.deleted_at.is_(None))
     if status is not None:
         q = q.filter(Merchant.status == status)

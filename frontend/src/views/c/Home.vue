@@ -4,7 +4,7 @@
     <section class="banner-section">
       <el-carousel height="360px" :interval="4000">
         <el-carousel-item v-for="(item, i) in banners" :key="i">
-          <div class="banner-slide" :style="{ background: item.bg }">
+          <div class="banner-slide" :style="{ backgroundImage: `${item.overlay}, url(${item.img})`, backgroundSize: 'cover', backgroundPosition: 'center' }">
             <div class="banner-content">
               <h2>{{ item.title }}</h2>
               <p>{{ item.sub }}</p>
@@ -113,9 +113,30 @@ const router = useRouter()
 const defaultImg = 'https://picsum.photos/300/300?grayscale'
 
 const banners = [
-  { title: '积分兑好礼', sub: '海量商品等你来换', btn: '立即兑换', link: '/products', bg: 'linear-gradient(135deg, #00a854 0%, #00c878 100%)' },
-  { title: '话费秒充，积分抵扣', sub: '100积分抵1元，最高抵扣50%', btn: '快速充值', link: '/recharge', bg: 'linear-gradient(135deg, #1890ff 0%, #36cfc9 100%)' },
-  { title: '限时活动 积分翻倍', sub: '消费即积分，积分更值钱', btn: '查看活动', link: '/activities', bg: 'linear-gradient(135deg, #ff6600 0%, #ffad33 100%)' },
+  {
+    title: '积分兑好礼',
+    sub: '海量商品等你来换',
+    btn: '立即兑换',
+    link: '/products',
+    img: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1400&q=80',
+    overlay: 'linear-gradient(135deg, rgba(0,168,84,0.75) 0%, rgba(0,200,120,0.55) 100%)',
+  },
+  {
+    title: '话费秒充，积分抵扣',
+    sub: '100积分抵1元，最高抵扣50%',
+    btn: '快速充值',
+    link: '/recharge',
+    img: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=1400&q=80',
+    overlay: 'linear-gradient(135deg, rgba(24,144,255,0.75) 0%, rgba(54,207,201,0.55) 100%)',
+  },
+  {
+    title: '限时活动 积分翻倍',
+    sub: '消费即积分，积分更值钱',
+    btn: '查看活动',
+    link: '/activities',
+    img: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=1400&q=80',
+    overlay: 'linear-gradient(135deg, rgba(255,102,0,0.75) 0%, rgba(255,173,51,0.55) 100%)',
+  },
 ]
 
 const entries = [

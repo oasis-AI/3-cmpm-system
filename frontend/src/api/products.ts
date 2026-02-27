@@ -48,4 +48,9 @@ export const productsApi = {
   toggleStatus(id: number, status: string) {
     return request.patch(`/merchant/products/${id}/status`, { status })
   },
+
+  /** 商品评价列表（游客可读） */
+  reviews(productId: number, params?: { page?: number; page_size?: number }) {
+    return request.get(`/products/${productId}/reviews`, { params })
+  },
 }
