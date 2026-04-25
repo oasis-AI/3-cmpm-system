@@ -23,8 +23,8 @@ pip-wheel-metadata/
 .mypy_cache/
 
 # Alembic
-backend/alembic/versions/*.py
-!backend/alembic/versions/.gitkeep
+# backend/alembic/versions/*.py
+# !backend/alembic/versions/.gitkeep
 
 # Node
 node_modules/
