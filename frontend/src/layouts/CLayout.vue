@@ -6,8 +6,8 @@
         <router-link to="/" class="logo">
           <div class="logo-icon">移</div>
           <div class="logo-texts">
-            <span class="logo-main">积分商城</span>
-            <span class="logo-sub">China Mobile</span>
+            <span class="logo-main">中国移动积分商城系统</span>
+            <span class="logo-sub">用户端</span>
           </div>
         </router-link>
 
@@ -56,8 +56,8 @@
                   <el-dropdown-item command="profile">个人中心</el-dropdown-item>
                   <el-dropdown-item command="orders">我的订单</el-dropdown-item>
                   <el-dropdown-item command="points">积分明细</el-dropdown-item>
-                  <el-dropdown-item v-if="authStore.isMerchant" command="merchant" divided>商家后台</el-dropdown-item>
-                  <el-dropdown-item v-if="authStore.isAdmin" command="admin" divided>管理后台</el-dropdown-item>
+                  <el-dropdown-item v-if="authStore.isMerchant" command="merchant" divided>商户端</el-dropdown-item>
+                  <el-dropdown-item v-if="authStore.isAdmin" command="admin" divided>管理端</el-dropdown-item>
                   <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -84,7 +84,7 @@
 
     <footer class="c-footer">
       <div class="footer-inner">
-        <p>© 2025 中国移动积分商城 · 仅供演示</p>
+        <p>© 2025 中国移动积分商城系统 · 仅供演示</p>
         <p class="footer-links">
           <a href="#">使用说明</a> ·
           <a href="#">隐私政策</a> ·
@@ -236,14 +236,14 @@ async function handleUserCmd(cmd: string) {
   line-height: 1.2;
 }
 .logo-main {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: $primary-color;
 }
 .logo-sub {
-  font-size: 11px;
+  font-size: 10px;
   color: #aaa;
-  letter-spacing: 1px;
+  letter-spacing: 0;
 }
 
 /* ---- 搜索框 ---- */

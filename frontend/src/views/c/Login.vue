@@ -2,8 +2,8 @@
   <div class="auth-page">
     <div class="auth-card">
       <div class="auth-logo">
-        <span class="logo-text">积分商城</span>
-        <p class="logo-sub">中国移动积分兑换平台</p>
+        <span class="logo-text">中国移动积分商城系统</span>
+        <p class="logo-sub">用户登录</p>
       </div>
 
       <el-tabs v-model="activeTab" class="auth-tabs">
@@ -123,7 +123,7 @@ async function loginByPass() {
 .auth-logo {
   text-align: center;
   margin-bottom: 28px;
-  .logo-text { font-size: 28px; font-weight: 700; color: $primary-color; }
+  .logo-text { font-size: 24px; font-weight: 700; color: $primary-color; }
   .logo-sub { font-size: 13px; color: #999; margin-top: 4px; }
 }
 

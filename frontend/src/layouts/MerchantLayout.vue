@@ -3,8 +3,11 @@
     <!-- 侧边栏 -->
     <aside class="b-sidebar" :class="{ collapsed }">
       <div class="sidebar-logo" @click="router.push('/merchant')">
-        <el-icon size="24"><Shop /></el-icon>
-        <span v-if="!collapsed" class="logo-text">商家后台</span>
+        <el-icon size="24" class="logo-icon"><Shop /></el-icon>
+        <div v-if="!collapsed" class="logo-info">
+          <span class="logo-main">中国移动积分商城系统</span>
+          <span class="logo-role">商户端</span>
+        </div>
       </div>
 
       <el-menu
@@ -58,7 +61,7 @@
       <header class="b-topbar">
         <el-button :icon="collapsed ? Expand : Fold" text @click="collapsed = !collapsed" />
         <el-breadcrumb separator="/">
-          <el-breadcrumb-item :to="{ path: '/merchant/dashboard' }">商家后台</el-breadcrumb-item>
+          <el-breadcrumb-item :to="{ path: '/merchant/dashboard' }">商户端</el-breadcrumb-item>
           <el-breadcrumb-item>{{ currentTitle }}</el-breadcrumb-item>
         </el-breadcrumb>
         <div class="topbar-right">
@@ -133,19 +136,38 @@ async function handleLogout() {
 }
 
 .sidebar-logo {
-  height: 60px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   color: #00a854;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 700;
   border-bottom: 1px solid #f0f0f0;
   padding: 0 16px;
   overflow: hidden;
-  white-space: nowrap;
+
+  .logo-icon { flex-shrink: 0; }
+
+  .logo-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.4;
+    overflow: hidden;
+  }
+
+  .logo-main {
+    font-size: 13px;
+    font-weight: 700;
+    color: #00a854;
+    white-space: nowrap;
+  }
+
+  .logo-role {
+    font-size: 11px;
+    color: #aaa;
+    white-space: nowrap;
+  }
 }
 
 /* 覆盖 el-menu 默认样式 */

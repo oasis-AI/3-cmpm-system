@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     MYSQL_HOST: str = "127.0.0.1"
     MYSQL_PORT: int = 3306
     MYSQL_USER: str = "root"
-    MYSQL_ROOT_PASSWORD: str = "root123456"
+    MYSQL_ROOT_PASSWORD: str = "rootpassword"
     MYSQL_DB: str = "cmpm_db"
 
     # Redis

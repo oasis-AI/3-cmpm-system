@@ -45,7 +45,7 @@
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 
-const cfg = ref({ site_name: '中国移动积分商城', register_points: 200, points_rate: 100, auto_confirm_days: 7 })
+const cfg = ref({ site_name: '中国移动积分商城系统', register_points: 200, points_rate: 100, auto_confirm_days: 7 })
 function saveConfig() { ElMessage.success('配置已保存（演示模式）') }
 </script>
 

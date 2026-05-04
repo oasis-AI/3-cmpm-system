@@ -208,7 +208,7 @@ const entries = [
   { label: '流量套餐', link: '/recharge?type=data', icon: Cellphone, color: '#1890ff', bg: '#e3f2fd' },
   { label: '实物兑换', link: '/products', icon: Present, color: '#ff6600', bg: '#fff3e0' },
   { label: '限时活动', link: '/activities', icon: Promotion, color: '#f5222d', bg: '#fce4ec' },
-  { label: '积分商城', link: '/products', icon: Star, color: '#faad14', bg: '#fff8e1' },
+  { label: '积分兑换', link: '/products', icon: Star, color: '#faad14', bg: '#fff8e1' },
 ]
 
 const actColors = [
