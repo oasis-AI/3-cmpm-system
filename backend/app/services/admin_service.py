@@ -106,8 +106,9 @@ def svc_admin_points_rules(db: Session) -> list:
     rules = db.query(PointsRule).filter(PointsRule.deleted_at.is_(None)).all()
     return [
         {
-            "id": r.id, "name": r.name, "rule_type": r.rule_type,
-            "points_amount": r.points_amount, "is_active": r.is_active,
+            "id": r.id, "name": r.name, "type": r.rule_type,
+            "points": r.points_amount, "is_active": r.is_active,
+            "description": getattr(r, "description", "") or "",
         }
         for r in rules
     ]
@@ -115,14 +116,22 @@ def svc_admin_points_rules(db: Session) -> list:
 
 def svc_admin_save_rule(db: Session, data: dict) -> dict:
     rule_id = data.pop("id", None)
+    # 字段名映射
+    field_map = {"type": "rule_type", "points": "points_amount"}
+    mapped_data = {}
+    for k, v in data.items():
+        mapped_key = field_map.get(k, k)
+        mapped_data[mapped_key] = v
+    
     if rule_id:
         r = db.get(PointsRule, rule_id)
         if not r:
             raise BusinessException(ErrCode.NOT_FOUND, "规则不存在")
-        for k, v in data.items():
-            setattr(r, k, v)
+        for k, v in mapped_data.items():
+            if hasattr(r, k):
+                setattr(r, k, v)
     else:
-        r = PointsRule(**data)
+        r = PointsRule(**mapped_data)
         db.add(r)
     db.commit()
     db.refresh(r)
@@ -131,15 +140,17 @@ def svc_admin_save_rule(db: Session, data: dict) -> dict:
 
 # -------- Activities --------
 def svc_list_activities(db: Session, page: int = 1, page_size: int = 10) -> dict:
-    q = db.query(Activity).filter(Activity.deleted_at.is_(None), Activity.status == "active")
+    q = db.query(Activity).filter(Activity.deleted_at.is_(None))
     total = q.count()
     acts = q.order_by(Activity.created_at.desc()).offset((page - 1) * page_size).limit(page_size).all()
     items = [
         {
             "id": a.id, "title": a.title, "type": a.type,
-            "start_at": a.start_at.isoformat() if a.start_at else None,
-            "end_at": a.end_at.isoformat() if a.end_at else None,
+            "start_time": a.start_at.isoformat() if a.start_at else None,
+            "end_time": a.end_at.isoformat() if a.end_at else None,
+            "status": a.status,
             "banner_url": a.banner_url,
+            "description": getattr(a, "description", "") or "",
         }
         for a in acts
     ]

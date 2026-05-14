@@ -69,8 +69,14 @@ function openDialog(item?: any) {
 async function save() {
   saving.value = true
   try {
-    if (editItem.value) await activitiesApi.adminUpdate(editItem.value.id, form.value)
-    else await activitiesApi.adminCreate(form.value)
+    const data = {
+      title: form.value.title,
+      description: form.value.description,
+      start_at: form.value.start_time,
+      end_at: form.value.end_time,
+    }
+    if (editItem.value) await activitiesApi.adminUpdate(editItem.value.id, data)
+    else await activitiesApi.adminCreate(data)
     ElMessage.success('保存成功'); dialogVisible.value = false; load()
   } finally { saving.value = false }
 }

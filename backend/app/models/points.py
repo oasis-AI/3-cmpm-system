@@ -15,6 +15,7 @@ class PointsRule(Base, TimestampMixin):
     name = Column(String(100), nullable=False, comment="规则名称")
     points_amount = Column(INTEGER(unsigned=True), nullable=False)
     cash_price = Column(DECIMAL(10, 2), nullable=True, comment="充值套餐现金价（Demo均为0）")
+    description = Column(String(500), nullable=True, comment="规则描述")
     is_active = Column(TINYINT(1), nullable=False, default=1)
 
 

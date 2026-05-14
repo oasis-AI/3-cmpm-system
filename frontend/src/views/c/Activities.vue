@@ -6,7 +6,7 @@
         <el-empty v-if="!loading && !list.length" description="暂无活动" />
         <div class="activity-grid">
           <el-card v-for="a in list" :key="a.id" class="activity-card">
-            <img :src="a.banner_image || 'https://via.placeholder.com/360x160'" class="activity-banner" />
+            <img :src="a.banner_url || 'https://via.placeholder.com/360x160'" class="activity-banner" />
             <div class="activity-body">
               <div class="activity-title">{{ a.title }}</div>
               <div class="activity-desc">{{ a.description }}</div>
