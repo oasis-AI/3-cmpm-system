@@ -514,12 +514,20 @@ flowchart TB
 	R2([退款状态]) --- R
 	R3([退款原因]) --- R
 
+	AD[管理员信息]
+
+	AD1([管理员ID]) --- AD
+	AD2([管理员角色]) --- AD
+	AD3([操作权限]) --- AD
+
 	A{入驻}
 	B{发布}
 	C{下单}
 	D{对应}
 	E{申请}
 	F{处理}
+	G{审核商户}
+	H{审核退款}
 
 	U -->|1| A
 	A -->|0..1| M
@@ -539,20 +547,26 @@ flowchart TB
 	M -->|1| F
 	F -->|N| O
 
-	class U,M,P,O,S,R entity;
-	class A,B,C,D,E,F relation;
-	class U1,U2,U3,M1,M2,M3,P1,P2,P3,O1,O2,O3,S1,S2,S3,R1,R2,R3 attr;
+	AD -->|1| G
+	G -->|N| M
+
+	AD -->|1| H
+	H -->|N| R
+
+	class U,M,P,O,S,R,AD entity;
+	class A,B,C,D,E,F,G,H relation;
+	class U1,U2,U3,M1,M2,M3,P1,P2,P3,O1,O2,O3,S1,S2,S3,R1,R2,R3,AD1,AD2,AD3 attr;
 ```
 
 图 4-8 系统实体关系图
 
-图 4-8 说明数据库概念结构已经覆盖用户消费、商户供给和售后治理三条主线，为后续逻辑表设计提供了直接依据。
+图 4-8 说明数据库概念结构已经覆盖用户消费、商户供给、售后治理和管理员审核四条主线，其中管理员实体通过审核商户和审核退款两类关系参与平台治理，为后续逻辑表设计提供了直接依据。
 
 ### 4.3.2 逻辑结构设计
 
 由于系统业务表较多，且大多数数据表均包含 created_at、updated_at 和 deleted_at 等通用审计字段，本文选取与核心业务联系最紧密且与页面截图直接相关的关键数据表进行说明。其余如商品规格表、积分规则表和快捷充值订单表等扩展业务表，在第五章结合具体功能实现再行补充说明。
 
-如表 4-1 至表 4-7 所示，本系统的核心数据结构围绕用户、供给、订单、积分和售后五条主线展开。其中，表 4-1 至表 4-5 主要描述用户、商户、商品、库存和订单的基础结构，表 4-5a 至表 4-7 则补充订单快照、积分追踪和退款审核等扩展逻辑。
+如表 4-1 至表 4-8 所示，本系统的核心数据结构围绕用户、供给、订单、积分、售后和管理员操作六条主线展开。其中，表 4-1 至表 4-5 主要描述用户、商户、商品、库存和订单的基础结构，表 4-5a 至表 4-7 则补充订单快照、积分追踪和退款审核等扩展逻辑，表 4-8 描述管理员操作日志结构。
 
 如表 4-1 所示，users 表用于保存系统三类账号的基础身份信息与积分余额。
 
@@ -705,7 +719,23 @@ flowchart TB
 
 表 4-7 说明退款申请表负责记录售后原因、审核状态和处理备注。
 
-通过上述逻辑结构设计，系统能够较完整地支撑用户积分消费、商户履约和平台治理三条业务主线。其中，orders 与 order_items 通过快照字段保证历史展示稳定，inventory 通过 locked_quantity 描述履约过程中的库存占用关系，points_records 则作为所有积分行为的统一追踪依据，refund_requests 则补足了售后审核链路所需的过程数据。
+如表 4-8 所示，admin_operation_logs 表用于记录管理员执行审核、封禁和积分调整等操作的完整日志，便于平台行为追踪与管理审计。
+
+| 字段名 | 数据类型 | 长度 | 主/外键 | 字段说明 |
+| --- | --- | --- | --- | --- |
+| id | BIGINT | 20 | PK | 日志主键 |
+| admin_id | BIGINT | 20 | FK | 操作管理员编号（关联 users.id） |
+| action_type | VARCHAR | 50 | - | 操作类型（approve_merchant、reject_merchant、approve_refund、reject_refund、ban_user、adjust_points 等） |
+| target_type | VARCHAR | 30 | - | 操作对象类型（merchant、refund、user） |
+| target_id | BIGINT | 20 | - | 操作对象主键编号 |
+| note | VARCHAR | 500 | - | 操作备注或驳回原因 |
+| operated_at | DATETIME | 日期时间 | - | 操作时间 |
+
+表 4-8 admin_operation_logs 管理员操作日志表
+
+表 4-8 说明管理员操作日志表通过 action_type 和 target_id 组合追踪管理员对商户、退款和用户的全部审核与治理动作，为平台操作可追溯性提供支撑。
+
+通过上述逻辑结构设计，系统能够较完整地支撑用户积分消费、商户履约、平台治理和管理员操作追踪四条业务主线。其中，orders 与 order_items 通过快照字段保证历史展示稳定，inventory 通过 locked_quantity 描述履约过程中的库存占用关系，points_records 则作为所有积分行为的统一追踪依据，refund_requests 补足了售后审核链路所需的过程数据，admin_operation_logs 则为管理员审核行为提供了完整的可追溯记录。
 
 # 第五章 系统实现
 

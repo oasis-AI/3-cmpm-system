@@ -35,7 +35,7 @@
           <el-icon><Coin /></el-icon>
           <template #title>积分规则</template>
         </el-menu-item>
-        <el-menu-item index="/admin/activities">
+        <el-menu-item v-show="false" index="/admin/activities">
           <el-icon><Promotion /></el-icon>
           <template #title>活动管理</template>
         </el-menu-item>

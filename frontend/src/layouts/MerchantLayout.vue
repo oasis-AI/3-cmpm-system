@@ -39,7 +39,7 @@
           <el-icon><TrendCharts /></el-icon>
           <template #title>数据分析</template>
         </el-menu-item>
-        <el-menu-item index="/merchant/activities">
+        <el-menu-item v-show="false" index="/merchant/activities">
           <el-icon><Promotion /></el-icon>
           <template #title>活动管理</template>
         </el-menu-item>
